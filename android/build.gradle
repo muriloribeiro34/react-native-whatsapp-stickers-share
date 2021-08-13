@@ -92,7 +92,6 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:${safeExtGet('kotlinx_serialization_version', DEFAULT_KOTLINX_SERIALIZATION_VERSION)}"
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.react:react-native:+'  // From node_modules
-    implementation 'com.arthenica:mobile-ffmpeg-full-gpl:4.4'
 }
 
 def configureReactNativePom(def pom) {
