@@ -29,7 +29,10 @@ class WhatsAppStickersShareModule(
     }
 
     override fun onActivityResult(activity: Activity?, requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode != REQUEST_CODE_ADD_PACK || data === null) return
+        if (requestCode != REQUEST_CODE_ADD_PACK || data === null){
+            mPromise.reject("Canceled")
+            return
+        }
         if (resultCode == Activity.RESULT_CANCELED) {
             val error = data.getStringExtra("validation_error")
             Log.e(TAG, "Failed to add pack: $error")
