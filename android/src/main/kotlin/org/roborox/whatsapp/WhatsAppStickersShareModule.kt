@@ -21,6 +21,9 @@ import kotlin.time.measureTime
 class WhatsAppStickersShareModule(
         private val reactContext: ReactApplicationContext
 ) : ReactContextBaseJavaModule(reactContext), ActivityEventListener {
+
+
+
     init {
         reactContext.addActivityEventListener(this)
     }
@@ -30,14 +33,18 @@ class WhatsAppStickersShareModule(
         if (resultCode == Activity.RESULT_CANCELED) {
             val error = data.getStringExtra("validation_error")
             Log.e(TAG, "Failed to add pack: $error")
+            mPromise.reject(error)
             return
         }
+        mPromise.resolve(true)
         Log.e(TAG, "Pack added")
     }
 
     override fun onNewIntent(intent: Intent?) { }
 
     override fun getName() = "WhatsAppStickersShare"
+
+    lateinit var mPromise : Promise;
 
     private suspend fun packDir(identifier: String) = withContext(Dispatchers.IO) {
         val cacheDir = this@WhatsAppStickersShareModule.reactContext.externalCacheDir!!
@@ -76,28 +83,42 @@ class WhatsAppStickersShareModule(
         return dest
     }
 
-    private fun storeImage(imageUrl: String, file: File, size: Int, compress: Bitmap.CompressFormat, quality: Int) {
+    private fun storeImage(imageUrl: String, file: File, size: Int, compress: Bitmap.CompressFormat, quality: Int,animated: Boolean) {
         URL(imageUrl).openStream().use { input -> FileOutputStream(file).use { output ->
-            val source = BitmapFactory.decodeStream(input)
-            val image = if (source.width == size && source.height == size) { source } else {
-                scaleCenterCrop(source, size)
+            if(animated){
+                val data = ByteArray(1024)
+                var total: Long = 0
+                var count : Int
+
+                while (input.read(data).also { count = it } != -1) {
+                    total += count.toLong()
+                    // writing data to file
+                    output.write(data, 0, count)
+                }
+            }else{
+                val source = BitmapFactory.decodeStream(input)
+                val image = if (source.width == size && source.height == size) { source } else {
+                    scaleCenterCrop(source, size)
+                }
+                image.compress(compress, quality, output)
             }
-            image.compress(compress, quality, output)
+
+
         } }
     }
 
     private suspend fun storeTrayImage(imageUrl: String, identifier: String): String {
         val file = File(packDir(identifier).absolutePath + File.separator + TRAY_IMAGE_NAME)
         withContext(Dispatchers.IO) {
-            storeImage(imageUrl, file, TRAY_IMAGE_SIZE, Bitmap.CompressFormat.PNG, 100)
+            storeImage(imageUrl, file, TRAY_IMAGE_SIZE, Bitmap.CompressFormat.PNG, 100,false)
         }
         return file.name
     }
 
-    private suspend fun storeStickerImage(imageUrl: String, packIdentifier: String): String {
+    private suspend fun storeStickerImage(imageUrl: String, packIdentifier: String,animated:Boolean): String {
         @Suppress("BlockingMethodInNonBlockingContext")
         val file = File.createTempFile(STICKER_IMAGE_PREFIX, STICKER_IMAGE_SUFFIX, packDir(packIdentifier))
-        storeImage(imageUrl, file, STICKER_IMAGE_SIZE, Bitmap.CompressFormat.WEBP, 50)
+        storeImage(imageUrl, file, STICKER_IMAGE_SIZE, Bitmap.CompressFormat.WEBP, 50,animated)
         return file.name
     }
 
@@ -116,8 +137,19 @@ class WhatsAppStickersShareModule(
                 licenseAgreementWebsite = config.getString("licenseURL")!!,
                 imageDataVersion = config.getString("image_data_version")!!,
                 avoidCache = false,
-                iosAppStoreLink = if (config.hasKey("iosAppStoreLink")) { config.getString("iosAppStoreLink") } else { null },
-                androidPlayStoreLink = if (config.hasKey("androidPlayStoreLink")) { config.getString("androidPlayStoreLink") } else { null }
+                iosAppStoreLink = if (config.hasKey("iosAppStoreLink")) {
+                    config.getString("iosAppStoreLink")
+                } else {
+                    null
+                },
+                androidPlayStoreLink = if (config.hasKey("androidPlayStoreLink")) {
+                    config.getString("androidPlayStoreLink")
+                } else {
+                    null
+                },
+                animatedStickerPack = if (config.hasKey("animated_sticker_pack")) {
+                    config.getBoolean("animated_sticker_pack")
+                } else false
         )
 
         val stickers = config.getArray("stickers")!!
@@ -136,7 +168,7 @@ class WhatsAppStickersShareModule(
                 }
             }
             promises.add(GlobalScope.async(Dispatchers.IO) {
-                val image = storeStickerImage(imageURL, identifier)
+                val image = storeStickerImage(imageURL, identifier,stickerPack.animatedStickerPack)
                 stickerPack.stickers.add(Sticker(image, emojis))
                 Unit
             })
@@ -149,6 +181,7 @@ class WhatsAppStickersShareModule(
     @ExperimentalTime
     @ReactMethod
     fun share(config: ReadableMap, promise: Promise) {
+        this.mPromise = promise
         GlobalScope.launch {
             try {
                 val packDir = packDirUnsafe(config.getString("identifier")!!)
@@ -174,12 +207,13 @@ class WhatsAppStickersShareModule(
                 val activity = currentActivity
                 if (activity !== null && activity.packageManager.resolveActivity(intent, 0) !== null) {
                     activity.startActivityForResult(intent, REQUEST_CODE_ADD_PACK)
-                    promise.resolve(true)
+                    //mPromise.resolve(true)
                 } else {
-                    promise.resolve(false)
+                    mPromise.resolve(false)
                 }
             } catch (error: Throwable) {
-                promise.reject(error)
+                Log.d(TAG,""+error)
+                mPromise.reject(error)
             }
         }
     }

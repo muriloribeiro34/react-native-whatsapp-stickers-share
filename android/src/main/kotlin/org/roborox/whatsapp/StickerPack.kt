@@ -15,5 +15,6 @@ internal data class StickerPack(
         val avoidCache: Boolean,
         val stickers: ArrayList<Sticker> = ArrayList(),
         val iosAppStoreLink: String? = null,
-        val androidPlayStoreLink: String? = null
+        val androidPlayStoreLink: String? = null,
+        val animatedStickerPack: Boolean = false
 ) { }

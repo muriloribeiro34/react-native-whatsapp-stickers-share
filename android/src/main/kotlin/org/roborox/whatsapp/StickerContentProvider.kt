@@ -73,7 +73,8 @@ class StickerContentProvider : ContentProvider() {
                 PRIVACY_POLICY_WEBSITE,
                 LICENSE_AGREENMENT_WEBSITE,
                 IMAGE_DATA_VERSION,
-                AVOID_CACHE
+                AVOID_CACHE,
+                ANIMATED_STICKER_PACK
         ))
         for (stickerPack in packs) {
             val builder = cursor.newRow()
@@ -89,6 +90,7 @@ class StickerContentProvider : ContentProvider() {
             builder.add(stickerPack.licenseAgreementWebsite)
             builder.add(stickerPack.imageDataVersion)
             builder.add(if (stickerPack.avoidCache) 1 else 0)
+            builder.add(if (stickerPack.animatedStickerPack) 1 else 0)
         }
         return cursor
     }
@@ -180,6 +182,7 @@ class StickerContentProvider : ContentProvider() {
         private const val LICENSE_AGREENMENT_WEBSITE = "sticker_pack_license_agreement_website"
         private const val IMAGE_DATA_VERSION = "image_data_version"
         private const val AVOID_CACHE = "whatsapp_will_not_cache_stickers"
+        private const val ANIMATED_STICKER_PACK = "animated_sticker_pack"
 
         private const val STICKER_FILE_NAME_IN_QUERY = "sticker_file_name"
         private const val STICKER_FILE_EMOJI_IN_QUERY = "sticker_emoji"
