@@ -30,22 +30,22 @@ class WhatsAppStickersShareModule(
 
     override fun onActivityResult(activity: Activity?, requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode != REQUEST_CODE_ADD_PACK || data === null){
-            //if(::mPromise.isInitialized){
-                //mPromise.reject("Canceled")
-            //}
+            if(::mPromise.isInitialized){
+                mPromise.reject("Canceled")
+            }
 
             return
         }
         if (resultCode == Activity.RESULT_CANCELED) {
             val error = data.getStringExtra("validation_error")
-            //if(::mPromise.isInitialized){
-                //mPromise.reject(error)
-            //}
+            if(::mPromise.isInitialized){
+                mPromise.reject(error)
+            }
             return
         }
-        //if(::mPromise.isInitialized){
-            //mPromise.resolve(true)
-        //}
+        if(::mPromise.isInitialized){
+            mPromise.resolve(true)
+        }
     }
 
     override fun onNewIntent(intent: Intent?) { }
@@ -189,7 +189,7 @@ class WhatsAppStickersShareModule(
     @ExperimentalTime
     @ReactMethod
     fun share(config: ReadableMap, promise: Promise) {
-        //this.mPromise = promise
+        mPromise = promise
         GlobalScope.launch {
             try {
                 val packDir = packDirUnsafe(config.getString("identifier")!!)
@@ -215,13 +215,13 @@ class WhatsAppStickersShareModule(
                 val activity = currentActivity
                 if (activity !== null && activity.packageManager.resolveActivity(intent, 0) !== null) {
                     activity.startActivityForResult(intent, REQUEST_CODE_ADD_PACK)
-                    promise.resolve(true)
+                    //promise.resolve(true)
                 } else {
-                    promise.resolve(false)
+                    mPromise.resolve(false)
                 }
             } catch (error: Throwable) {
                 //Log.d(TAG,""+error)
-                promise.reject(error)
+                mPromise.reject(error)
             }
         }
     }

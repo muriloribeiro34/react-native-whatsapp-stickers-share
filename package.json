@@ -1,6 +1,6 @@
 {
   "name": "react-native-whatsapp-stickers-share",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "Share whatsapp stickers react-native",
   "main": "index.ts",
   "types": "index.d.ts",
