@@ -90,9 +90,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${safeExtGet('kotlin_version', DEFAULT_KOTLIN_VERSION)}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${safeExtGet('kotlinx_coroutines_version', DEFAULT_KOTLINX_COROUTINES_VERSION)}"
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:${safeExtGet('kotlinx_serialization_version', DEFAULT_KOTLINX_SERIALIZATION_VERSION)}"
-    implementation "org.koin:koin-androidx-scope:2.2.0-alpha-1"
-    implementation "org.koin:koin-androidx-viewmodel:2.2.0-alpha-1"
-    implementation "org.koin:koin-androidx-fragment:2.2.0-alpha-1"
+    implementation "io.insert-koin:koin-android:2.2.3"
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.react:react-native:+'  // From node_modules
 }
